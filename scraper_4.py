@@ -33,14 +33,12 @@ ALLOWED_EVENTS = {
     "Anulación de tarea creada",
     "Formulario de calificaciones visto",
     "Visualización de las calificaciones",
-    "Se ha calificado el envío",
-    "Calificación XLS exportada",
-    "Calificación OpenDocument exportada"
+    "Se ha calificado el envío"
 }
 
 def extract_id_from_href(href):
     """Extrae el número después de id= y antes de & en un link."""
-    match = re.search(r"id=(\d+)&", href)
+    match = re.search(r"id=(\d+)", href)
     return match.group(1) if match else None
 
 def get_last_page(soup):
@@ -118,10 +116,15 @@ while True:
         link2 = cell2.find("a")["href"] if cell2 and cell2.find("a") else ""
         row_data.append(extract_id_from_href(link2) if link2 else "")
 
-        # c3 - c6
+        # c3 - c6 (modificando c3 para extraer ID desde href)
         for i in range(3, 7):
             cell = row.find("td", class_=f"cell c{i}")
-            row_data.append(cell.get_text(strip=True) if cell else "")
+            if i == 3:
+                link = cell.find("a")["href"] if cell and cell.find("a") else ""
+                id_from_href = extract_id_from_href(link) if link else ""
+                row_data.append(id_from_href)
+            else:
+                row_data.append(cell.get_text(strip=True) if cell else "")
 
         # Filtrar por evento (columna c5)
         event_name = row_data[5] if len(row_data) > 5 else ""
@@ -135,7 +138,7 @@ while True:
         break
 
 # 4. Guardar en CSV (UTF-8 con BOM)
-with open("riwi_logs.csv", "w", newline="", encoding="utf-8-sig") as f:
+with open("riwi_logs_4x.csv", "w", newline="", encoding="utf-8-sig") as f:
     writer = csv.writer(f)
     writer.writerow(headers)
     writer.writerows(all_rows)
