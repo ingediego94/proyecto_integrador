@@ -123,19 +123,25 @@
 
 # print("Archivo 'riwi_logs.csv' generado con éxito.")
 
-
+# para ocultar credenciales
+import os   
+from dotenv import load_dotenv
 
 import requests
 from bs4 import BeautifulSoup
 import csv
 import re
-
-BASE_URL = "https://riwi-test.unhosting.site"
+# para ocultar credenciales
+load_dotenv()
+usuario_acceso = os.getenv("USER")
+password_acceso = os.getenv("PASSWORD")
+url_acceso = os.getenv("URL")
+BASE_URL = url_acceso
 LOGIN_URL = f"{BASE_URL}/login/index.php"
 REPORT_URL = f"{BASE_URL}/report/log/index.php"
-
-USERNAME = "riwipruebas"
-PASSWORD = "Riwi2025*"
+# para ocultar credenciales
+USERNAME = usuario_acceso
+PASSWORD = password_acceso
 
 PARAMS = {
     "chooselog": "1",
@@ -260,11 +266,11 @@ while True:
         break
 
 # 4. Guardar en CSV (UTF-8 con BOM)
-with open("riwi_logs.csv", "w", newline="", encoding="utf-8-sig") as f:
+with open("riwi_logs_22.csv", "w", newline="", encoding="utf-8-sig") as f:
     writer = csv.writer(f)
     writer.writerow(headers)
     writer.writerows(all_rows)
 
-print("✅ Archivo 'riwi_logs.csv' generado con éxito (UTF-8 con BOM).")
+print("✅ Archivo 'riwi_logs_22.csv' generado con éxito (UTF-8 con BOM).")
 
 
