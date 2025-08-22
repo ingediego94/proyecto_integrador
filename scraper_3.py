@@ -72,7 +72,7 @@ if "logout" not in login_response.text.lower():
     print("❌ Error: No se pudo iniciar sesión en Moodle.")
     exit()
 
-print("✅ Login exitoso.")
+print("Login exitoso.")
 
 # 3. Scraping del reporte
 all_rows = []
@@ -140,4 +140,4 @@ with open("riwi_logs.csv", "w", newline="", encoding="utf-8-sig") as f:
     writer.writerow(headers)
     writer.writerows(all_rows)
 
-print("✅ Archivo 'riwi_logs.csv' generado con éxito (UTF-8 con BOM).")
+print("Archivo 'riwi_logs.csv' generado con éxito (UTF-8 con BOM).")
