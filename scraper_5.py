@@ -14,9 +14,9 @@ PARAMS = {
     "chooselog": "1",
     "showusers": "0",
     "showcourses": "0",
-    "id": "60",
+    "id": "51",
     "user": "0",
-    "date": "",
+    "date": "1748581200",
     "modid": "",
     "modaction": "",
     "origin": "web",
@@ -27,15 +27,8 @@ PARAMS = {
 # Eventos permitidos (columna c5)
 ALLOWED_EVENTS = {
     "Usuario calificado",
-    "Intento enviado",
-    "Intento del cuestionario revisado",
-    "Intento de cuestionario actualizado",
-    "Anulación de tarea creada",
-    "Formulario de calificaciones visto",
-    "Visualización de las calificaciones",
     "Se ha calificado el envío",
-    "Calificación XLS exportada",
-    "Calificación OpenDocument exportada"
+    "Calificación borrada"
 }
 
 def extract_id_from_href(href):
@@ -135,9 +128,9 @@ while True:
         break
 
 # 4. Guardar en CSV (UTF-8 con BOM)
-with open("riwi_logs_X.csv", "w", newline="", encoding="utf-8-sig") as f:
+with open("riwi_logs_5.csv", "w", newline="", encoding="utf-8-sig") as f:
     writer = csv.writer(f)
     writer.writerow(headers)
     writer.writerows(all_rows)
 
-print("Archivo 'riwi_logs-X.csv' generado con éxito (UTF-8 con BOM).")
+print("Archivo 'riwi_logs-5.csv' generado con éxito (UTF-8 con BOM).")

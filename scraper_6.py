@@ -14,9 +14,9 @@ PARAMS = {
     "chooselog": "1",
     "showusers": "0",
     "showcourses": "0",
-    "id": "60",
+    "id": "51",
     "user": "0",
-    "date": "",
+    "date": "1748754000",
     "modid": "",
     "modaction": "",
     "origin": "web",
@@ -27,21 +27,15 @@ PARAMS = {
 # Eventos permitidos (columna c5)
 ALLOWED_EVENTS = {
     "Usuario calificado",
-    "Intento enviado",
-    "Intento del cuestionario revisado",
-    "Intento de cuestionario actualizado",
-    "Anulación de tarea creada",
-    "Formulario de calificaciones visto",
-    "Visualización de las calificaciones",
-    "Se ha calificado el envío",
-    "Calificación XLS exportada",
-    "Calificación OpenDocument exportada"
+    "Se ha calificado el envío.",
+    "Calificación borrada"
 }
 
-def extract_id_from_href(href):
-    """Extrae el número después de id= y antes de & en un link."""
-    match = re.search(r"id=(\d+)&", href)
-    return match.group(1) if match else None
+def extract_id_from_href(href, key):
+    """Extrae el número asociado a un parámetro (courseid, itemid, id) dentro de un href."""
+    pattern = rf"{key}=(\d+)"
+    match = re.search(pattern, href)
+    return match.group(1) if match else ""
 
 def get_last_page(soup):
     """Encuentra la última página en la paginación."""
@@ -90,9 +84,10 @@ while True:
 
     soup = BeautifulSoup(response.text, "html.parser")
 
-    # Capturar encabezados una sola vez (solo c0 a c6)
+    # Capturar encabezados una sola vez (solo c0 a c6 + courseid + itemid + shcenv_id)
     if not headers:
         headers = [th.get_text(strip=True) for th in soup.select("th.header") if th["class"][-1] in [f"c{i}" for i in range(0, 7)]]
+        headers.extend(["courseid", "itemid", "shcenv_id"])
 
     # Capturar filas
     rows = soup.find_all("tr", id=re.compile(r"report_log_r\d+"))
@@ -102,7 +97,7 @@ while True:
     for row in rows:
         row_data = []
 
-        # c0 (Hora) → limpiar coma y comillas
+        # c0 (Hora)
         cell0 = row.find("td", class_="cell c0")
         fecha_hora = cell0.get_text(strip=True) if cell0 else ""
         fecha_hora = fecha_hora.replace(",", "").replace('"', "")
@@ -111,20 +106,35 @@ while True:
         # c1 con link
         cell1 = row.find("td", class_="cell c1")
         link1 = cell1.find("a")["href"] if cell1 and cell1.find("a") else ""
-        row_data.append(extract_id_from_href(link1) if link1 else "")
+        row_data.append(extract_id_from_href(link1, "id") if link1 else "")
 
         # c2 con link
         cell2 = row.find("td", class_="cell c2")
         link2 = cell2.find("a")["href"] if cell2 and cell2.find("a") else ""
-        row_data.append(extract_id_from_href(link2) if link2 else "")
+        row_data.append(extract_id_from_href(link2, "id") if link2 else "")
 
         # c3 - c6
+        cell_c5_href = ""  
+        event_name = ""
         for i in range(3, 7):
             cell = row.find("td", class_=f"cell c{i}")
-            row_data.append(cell.get_text(strip=True) if cell else "")
+            if i == 5 and cell and cell.find("a"):  # c5 con link al evento
+                cell_c5_href = cell.find("a")["href"]
+                event_name = cell.get_text(strip=True)
+                row_data.append(event_name)
+            else:
+                row_data.append(cell.get_text(strip=True) if cell else "")
 
-        # Filtrar por evento (columna c5)
-        event_name = row_data[5] if len(row_data) > 5 else ""
+        # courseid y itemid desde c5 href
+        courseid = extract_id_from_href(cell_c5_href, "courseid")
+        itemid = extract_id_from_href(cell_c5_href, "itemid")
+
+        # shcenv_id solo si el evento es "Se ha calificado el envío"
+        shcenv_id = extract_id_from_href(cell_c5_href, "id") if event_name == "Se ha calificado el envío." else ""
+
+        row_data.extend([courseid, itemid, shcenv_id])
+
+        # Filtrar por evento (columna c5 texto)
         if event_name in ALLOWED_EVENTS:
             all_rows.append(row_data)
 
@@ -135,9 +145,9 @@ while True:
         break
 
 # 4. Guardar en CSV (UTF-8 con BOM)
-with open("riwi_logs_X.csv", "w", newline="", encoding="utf-8-sig") as f:
+with open("riwi_logs_6.csv", "w", newline="", encoding="utf-8-sig") as f:
     writer = csv.writer(f)
     writer.writerow(headers)
     writer.writerows(all_rows)
 
-print("Archivo 'riwi_logs-X.csv' generado con éxito (UTF-8 con BOM).")
+print("Archivo 'riwi_logs-6.csv' generado con éxito (UTF-8 con BOM).")
